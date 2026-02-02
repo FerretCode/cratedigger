@@ -104,3 +104,39 @@ target_compile_definitions(CrateDigger
 )
 
 juce_generate_juce_header(CrateDigger)
+
+if(TARGET CrateDigger_Standalone)
+    install(TARGETS CrateDigger_Standalone DESTINATION bin)
+
+    if(EXISTS "${PLATFORM_BIN_SRC}")
+         install(DIRECTORY "${PLATFORM_BIN_SRC}/" DESTINATION bin/CrateDigger_Binaries)
+    endif()
+endif()
+
+if(TARGET CrateDigger_VST3)
+    install(TARGETS CrateDigger_VST3 DESTINATION VST3)
+
+    if(EXISTS "${PLATFORM_BIN_SRC}")
+         install(DIRECTORY "${PLATFORM_BIN_SRC}/" DESTINATION VST3/CrateDigger_Binaries)
+    endif()
+endif()
+
+set(CPACK_PACKAGE_NAME "CrateDigger")
+set(CPACK_PACKAGE_VENDOR "FerretCode")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CrateDigger Audio Plugin")
+set(CPACK_PACKAGE_VERSION "0.0.1")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "CrateDigger")
+set(CPACK_PACKAGE_CONTACT "ferret@frrt.space")
+
+if(WIN32)
+    set(CPACK_GENERATOR "ZIP;NSIS")
+    set(CPACK_NSIS_DISPLAY_NAME "CrateDigger")
+    set(CPACK_NSIS_PACKAGE_NAME "CrateDigger")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+elseif(UNIX AND NOT APPLE)
+    set(CPACK_GENERATOR "TGZ;DEB")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "FerretCode")
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+endif()
+
+include(CPack)
