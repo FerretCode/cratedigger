@@ -1,0 +1,106 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(CrateDigger VERSION 0.0.1)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(JUCE)
+
+juce_add_plugin(CrateDigger
+    COMPANY_NAME "FerretCode"
+    IS_SYNTH FALSE
+    NEEDS_MIDI_INPUT FALSE
+    NEEDS_MIDI_OUTPUT FALSE
+    IS_MIDI_EFFECT FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS TRUE
+    COPY_PLUGIN_AFTER_BUILD TRUE
+    PLUGIN_MANUFACTURER_CODE "frrt"
+    PLUGIN_CODE "CrtD"
+    FORMATS VST3 Standalone
+    PRODUCT_NAME "CrateDigger"
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/bin/linux")
+elseif(WIN32)
+    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/bin/win")
+endif()
+
+message(STATUS "Binaries Source Path: ${PLATFORM_BIN_SRC}")
+
+function(copy_binaries_to_target target_name)
+    if(NOT EXISTS "${PLATFORM_BIN_SRC}")
+        message(WARNING "Binary source folder not found at: ${PLATFORM_BIN_SRC}. Binaries will NOT be copied.")
+        return()
+    endif()
+
+    get_target_property(OUT_DIR ${target_name} BINARY_DIR)
+    set(BIN_DEST_DIR "${OUT_DIR}/CrateDigger_Binaries")
+
+    add_custom_command(TARGET ${target_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BIN_DEST_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PLATFORM_BIN_SRC}" "${BIN_DEST_DIR}"
+        COMMENT "Copying binaries to ${BIN_DEST_DIR}"
+    )
+endfunction()
+
+if(TARGET CrateDigger_Standalone)
+    copy_binaries_to_target(CrateDigger_Standalone)
+endif()
+
+if(TARGET CrateDigger_VST3)
+    if(EXISTS "${PLATFORM_BIN_SRC}")
+        add_custom_command(TARGET CrateDigger_VST3 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${PLATFORM_BIN_SRC}" "$<TARGET_FILE_DIR:CrateDigger_VST3>/../../../CrateDigger_Binaries"
+            COMMENT "Copying binaries next to VST3 bundle..."
+        )
+    else()
+        message(WARNING "Skipping VST3 binary copy - Source folder missing.")
+    endif()
+endif()
+
+find_package(CURL REQUIRED)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+    pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
+
+    target_include_directories(CrateDigger PRIVATE ${GTK3_INCLUDE_DIRS} ${WEBKIT_INCLUDE_DIRS})
+    target_link_directories(CrateDigger PRIVATE ${GTK3_LIBRARY_DIRS} ${WEBKIT_LIBRARY_DIRS})
+    target_link_libraries(CrateDigger PRIVATE ${GTK3_LIBRARIES} ${WEBKIT_LIBRARIES})
+endif()
+
+target_sources(CrateDigger
+    PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
+    Source/PathHelper.h
+)
+
+target_link_libraries(CrateDigger
+    PRIVATE
+    juce::juce_core
+    juce::juce_audio_utils
+    juce::juce_audio_processors
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+    juce::juce_graphics
+    juce::juce_events
+    juce::juce_data_structures
+    CURL::libcurl
+)
+
+target_compile_definitions(CrateDigger
+    PUBLIC
+    JUCE_WEB_BROWSER=1
+    JUCE_USE_CURL=1
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    JUCE_MODAL_LOOPS_PERMITTED=0
+)
+
+juce_generate_juce_header(CrateDigger)
