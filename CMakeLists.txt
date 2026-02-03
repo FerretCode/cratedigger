@@ -17,14 +17,19 @@ if (WIN32)
     endif()
 
     list(GET WEBVIEW2_DIR 0 WEBVIEW2_DIR)
+
     set(JUCE_WEBVIEW2_PACKAGE_LOCATION
         "${WEBVIEW2_DIR}"
         CACHE PATH "WebView2 NuGet package location"
     )
 
-    message(STATUS "Using WebView2 SDK at: ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
-endif()
+    set(WebView2_ROOT
+        "${WEBVIEW2_DIR}"
+        CACHE PATH "WebView2 root directory"
+    )
 
+    message(STATUS "Using WebView2 SDK at: ${WEBVIEW2_DIR}")
+endif() 
 
 add_subdirectory(JUCE)
 
