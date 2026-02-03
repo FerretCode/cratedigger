@@ -17,13 +17,13 @@ if (WIN32)
     list(GET WEBVIEW2_DIR 0 WEBVIEW2_DIR)
 
     set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${WEBVIEW2_DIR}" CACHE PATH "WebView2 NuGet package location" FORCE)
+    set(WebView2_root_dir "${WEBVIEW2_DIR}" CACHE PATH "WebView2 root directory" FORCE)
     
     set(MY_WEBVIEW2_INCLUDE_DIR "${WEBVIEW2_DIR}/build/native/include")
     set(MY_WEBVIEW2_STATIC_LIB  "${WEBVIEW2_DIR}/build/native/x64/WebView2LoaderStatic.lib")
 
     message(STATUS "WebView2 SDK Root:    ${WEBVIEW2_DIR}")
     message(STATUS "WebView2 Include:     ${MY_WEBVIEW2_INCLUDE_DIR}")
-    message(STATUS "WebView2 Static Lib:  ${MY_WEBVIEW2_STATIC_LIB}")
 endif() 
 
 add_subdirectory(JUCE)
