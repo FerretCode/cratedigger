@@ -133,6 +133,14 @@ if(WIN32)
         JUCE_USE_WIN_WEBVIEW2=1
         JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
     )
+
+	target_include_directories(CrateDigger PRIVATE 
+        "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include"
+    )
+
+    target_link_libraries(CrateDigger PRIVATE 
+        "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/x64/WebView2LoaderStatic.lib"
+    )
 endif()
 
 juce_generate_juce_header(CrateDigger)
