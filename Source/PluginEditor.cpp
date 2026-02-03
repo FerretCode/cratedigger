@@ -165,8 +165,11 @@ void CrateDiggerAudioProcessorEditor::initiateDownload() {
 void CrateDiggerAudioProcessorEditor::createWebView() {
     debugLog("Starting WebView creation on message thread");
 
-    setenv("WEBKIT_DISABLE_DMABUF_RENDERER", "1", 1);
-    setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1", 1);
+#if JUCE_WINDOWS
+#else
+    setenv("VARIABLE_NAME", "VALUE", 1);
+    setenv("ANOTHER_VAR", "VALUE", 1);
+#endif
 
     try {
         auto options = getBrowserOptions();
