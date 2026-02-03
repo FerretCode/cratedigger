@@ -25,12 +25,13 @@ CrateDiggerAudioProcessorEditor::getBrowserOptions() {
 #if JUCE_WINDOWS
     options = options.withBackend(
         juce::WebBrowserComponent::Options::Backend::webview2);
-#endif
+#elif JUCE_LINUX
     options = options.withResourceProvider(
         [](const auto &url)
             -> std::optional<juce::WebBrowserComponent::Resource> {
             return std::nullopt;
         });
+#endif
 
     return options;
 }
