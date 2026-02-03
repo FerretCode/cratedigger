@@ -1,4 +1,4 @@
-name: Build quicksample
+name: Build CrateDigger
 
 on: [push, pull_request]
 
@@ -54,7 +54,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: quicksample-${{ runner.os }}
+        name: CrateDigger-${{ runner.os }}
         path: |
           build/*.zip
           build/*.deb
