@@ -6,9 +6,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(WIN32)
-    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/packages" CACHE PATH "WebView2 NuGet package location")
+if (WIN32)
+    file(GLOB WEBVIEW2_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.*"
+    )
+
+    list(LENGTH WEBVIEW2_DIR WEBVIEW2_COUNT)
+    if (WEBVIEW2_COUNT EQUAL 0)
+        message(FATAL_ERROR "WebView2 NuGet package not found in packages/")
+    endif()
+
+    list(GET WEBVIEW2_DIR 0 WEBVIEW2_DIR)
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION
+        "${WEBVIEW2_DIR}"
+        CACHE PATH "WebView2 NuGet package location"
+    )
+
+    message(STATUS "Using WebView2 SDK at: ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
 endif()
+
 
 add_subdirectory(JUCE)
 
