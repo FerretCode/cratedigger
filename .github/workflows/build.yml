@@ -1,7 +1,5 @@
-name: Build CrateDigger
-
+name: Build quicksample
 on: [push, pull_request]
-
 jobs:
   build:
     name: Build on ${{ matrix.os }}
@@ -9,12 +7,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-
+    
     - name: Install Linux Deps
       if: runner.os == 'Linux'
       run: |
@@ -24,39 +21,42 @@ jobs:
             libx11-dev libxcomposite-dev libxcursor-dev \
             libxext-dev libxinerama-dev libxrandr-dev \
             libxrender-dev libwebkit2gtk-4.1-dev libglu1-mesa-dev
-
-    - name: Setup vcpkg (Windows)
+    
+    - name: Install WebView2 SDK (Windows)
       if: runner.os == 'Windows'
       run: |
-        vcpkg install curl:x64-windows
-        vcpkg integrate install
-
+        Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "nuget.exe"
+        
+        .\nuget.exe install Microsoft.Web.WebView2 -OutputDirectory packages
+        
+        Get-ChildItem packages
+    
     - name: Install NSIS (Windows)
       if: runner.os == 'Windows'
       run: choco install nsis
-
-    - name: Configure
+    
+    - name: Configure (Windows)
       if: runner.os == 'Windows'
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-
+      run: cmake -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+    
     - name: Configure (Linux)
       if: runner.os == 'Linux'
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-
+    
     - name: Build
       run: cmake --build build --config Release
-
+    
     - name: Package
       run: |
         cd build
         cpack -C Release
-
+    
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: CrateDigger-${{ runner.os }}
+        name: quicksample-${{ runner.os }}
         path: |
           build/*.zip
           build/*.deb
           build/*.tar.gz
-          build/*.exe
+          build/*.exe 
