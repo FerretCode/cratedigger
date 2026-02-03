@@ -101,6 +101,7 @@ target_compile_definitions(CrateDigger
     JUCE_USE_CURL=1
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_MODAL_LOOPS_PERMITTED=0
+    JUCE_WEBVIEW2_ALLOW_FALLBACK=0
 )
 
 juce_generate_juce_header(CrateDigger)

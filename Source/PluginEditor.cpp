@@ -23,8 +23,15 @@ juce::WebBrowserComponent::Options
 CrateDiggerAudioProcessorEditor::getBrowserOptions() {
     auto options = juce::WebBrowserComponent::Options();
 #if JUCE_WINDOWS
-    options = options.withBackend(
-        juce::WebBrowserComponent::Options::Backend::webview2);
+    options =
+        options
+            .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
+            .withWinWebView2Options(
+                juce::WebBrowserComponent::Options::WinWebView2()
+                    .withUserDataFolder(
+                        juce::File::getSpecialLocation(
+                            juce::File::tempDirectory)
+                            .getChildFile("CrateDiggerWebView2")));
 #elif JUCE_LINUX
     options = options.withResourceProvider(
         [](const auto &url)
