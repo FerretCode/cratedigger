@@ -7,10 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
-    file(GLOB WEBVIEW2_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.*"
-    )
-
+    file(GLOB WEBVIEW2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.*")
+    
     list(LENGTH WEBVIEW2_DIR WEBVIEW2_COUNT)
     if (WEBVIEW2_COUNT EQUAL 0)
         message(FATAL_ERROR "WebView2 NuGet package not found in packages/")
@@ -18,17 +16,14 @@ if (WIN32)
 
     list(GET WEBVIEW2_DIR 0 WEBVIEW2_DIR)
 
-    set(JUCE_WEBVIEW2_PACKAGE_LOCATION
-        "${WEBVIEW2_DIR}"
-        CACHE PATH "WebView2 NuGet package location"
-    )
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${WEBVIEW2_DIR}" CACHE PATH "WebView2 NuGet package location" FORCE)
+    
+    set(MY_WEBVIEW2_INCLUDE_DIR "${WEBVIEW2_DIR}/build/native/include")
+    set(MY_WEBVIEW2_STATIC_LIB  "${WEBVIEW2_DIR}/build/native/x64/WebView2LoaderStatic.lib")
 
-    set(WebView2_root_dir
-        "${WEBVIEW2_DIR}"
-        CACHE PATH "WebView2 root directory"
-    )
-
-    message(STATUS "Using WebView2 SDK at: ${WEBVIEW2_DIR}")
+    message(STATUS "WebView2 SDK Root:    ${WEBVIEW2_DIR}")
+    message(STATUS "WebView2 Include:     ${MY_WEBVIEW2_INCLUDE_DIR}")
+    message(STATUS "WebView2 Static Lib:  ${MY_WEBVIEW2_STATIC_LIB}")
 endif() 
 
 add_subdirectory(JUCE)
@@ -134,20 +129,15 @@ if(WIN32)
         JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
     )
 
-	target_include_directories(CrateDigger PRIVATE 
-        "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/include"
-    )
+    target_include_directories(CrateDigger PRIVATE "${MY_WEBVIEW2_INCLUDE_DIR}")
 
-    target_link_libraries(CrateDigger PRIVATE 
-        "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/build/native/x64/WebView2LoaderStatic.lib"
-    )
+    target_link_libraries(CrateDigger PRIVATE "${MY_WEBVIEW2_STATIC_LIB}")
 endif()
 
 juce_generate_juce_header(CrateDigger)
 
 if(TARGET CrateDigger_Standalone)
     install(TARGETS CrateDigger_Standalone DESTINATION bin)
-
     if(EXISTS "${PLATFORM_BIN_SRC}")
          install(DIRECTORY "${PLATFORM_BIN_SRC}/" DESTINATION bin/CrateDigger_Binaries)
     endif()
@@ -155,7 +145,6 @@ endif()
 
 if(TARGET CrateDigger_VST3)
     install(TARGETS CrateDigger_VST3 DESTINATION VST3)
-
     if(EXISTS "${PLATFORM_BIN_SRC}")
          install(DIRECTORY "${PLATFORM_BIN_SRC}/" DESTINATION VST3/CrateDigger_Binaries)
     endif()
