@@ -6,6 +6,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(WIN32)
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/packages" CACHE PATH "WebView2 NuGet package location")
+endif()
+
 add_subdirectory(JUCE)
 
 juce_add_plugin(CrateDigger
@@ -15,17 +19,18 @@ juce_add_plugin(CrateDigger
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD FALSE
     PLUGIN_MANUFACTURER_CODE "frrt"
     PLUGIN_CODE "CrtD"
     FORMATS VST3 Standalone
     PRODUCT_NAME "CrateDigger"
+    NEEDS_WEBVIEW2 TRUE
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/bin/linux")
+    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/linux")
 elseif(WIN32)
-    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/bin/win")
+    set(PLATFORM_BIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/win")
 endif()
 
 message(STATUS "Binaries Source Path: ${PLATFORM_BIN_SRC}")
@@ -61,16 +66,15 @@ if(TARGET CrateDigger_VST3)
     endif()
 endif()
 
-find_package(CURL REQUIRED)
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(CURL REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
     pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
 
     target_include_directories(CrateDigger PRIVATE ${GTK3_INCLUDE_DIRS} ${WEBKIT_INCLUDE_DIRS})
     target_link_directories(CrateDigger PRIVATE ${GTK3_LIBRARY_DIRS} ${WEBKIT_LIBRARY_DIRS})
-    target_link_libraries(CrateDigger PRIVATE ${GTK3_LIBRARIES} ${WEBKIT_LIBRARIES})
+    target_link_libraries(CrateDigger PRIVATE ${GTK3_LIBRARIES} ${WEBKIT_LIBRARIES} CURL::libcurl)
 endif()
 
 target_sources(CrateDigger
@@ -92,7 +96,6 @@ target_link_libraries(CrateDigger
     juce::juce_graphics
     juce::juce_events
     juce::juce_data_structures
-    CURL::libcurl
 )
 
 target_compile_definitions(CrateDigger
@@ -101,8 +104,15 @@ target_compile_definitions(CrateDigger
     JUCE_USE_CURL=1
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_MODAL_LOOPS_PERMITTED=0
-    JUCE_WEBVIEW2_ALLOW_FALLBACK=0
 )
+
+if(WIN32)
+    target_compile_definitions(CrateDigger
+        PUBLIC
+        JUCE_USE_WIN_WEBVIEW2=1
+        JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
+    )
+endif()
 
 juce_generate_juce_header(CrateDigger)
 

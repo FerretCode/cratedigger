@@ -4,25 +4,35 @@
 #include <fstream>
 
 void debugLog(const juce::String &message) {
+#if JUCE_WINDOWS
+    juce::File logFile(juce::File::getSpecialLocation(juce::File::tempDirectory)
+                           .getChildFile("cratedigger_debug.log"));
+#else
     juce::File logFile("/tmp/cratedigger_debug.log");
+#endif
 
     if (!logFile.exists())
         logFile.create();
 
-    std::ofstream stream(logFile.getFullPathName().getCharPointer(),
+    std::ofstream stream(logFile.getFullPathName().toStdString(),
                          std::ios::app);
     if (stream.is_open()) {
         juce::Time now = juce::Time::getCurrentTime();
-
         stream << "[" << now.toString(true, true) << "] " << message
                << std::endl;
     }
+
+#if JUCE_WINDOWS
+    OutputDebugStringA(("[CrateDigger] " + message + "\n").toRawUTF8());
+#endif
 }
 
 juce::WebBrowserComponent::Options
 CrateDiggerAudioProcessorEditor::getBrowserOptions() {
     auto options = juce::WebBrowserComponent::Options();
 #if JUCE_WINDOWS
+    debugLog("Configuring WebView2 Options");
+
     options =
         options
             .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
@@ -32,6 +42,8 @@ CrateDiggerAudioProcessorEditor::getBrowserOptions() {
                         juce::File::getSpecialLocation(
                             juce::File::tempDirectory)
                             .getChildFile("CrateDiggerWebView2")));
+
+    debugLog("WebView2 Options Configured");
 #elif JUCE_LINUX
     options = options.withResourceProvider(
         [](const auto &url)
@@ -60,7 +72,7 @@ CrateDiggerAudioProcessorEditor::CrateDiggerAudioProcessorEditor(
             downloadButton.setVisible(true);
 
             downloadButton.setEnabled(true);
-            downloadButton.setButtonText("⬇ Download This Sample");
+            downloadButton.setButtonText("Download This Sample");
         });
     };
 
@@ -174,7 +186,21 @@ void CrateDiggerAudioProcessorEditor::createWebView() {
     debugLog("Starting WebView creation on message thread");
 
 #if JUCE_WINDOWS
+    debugLog("Platform: Windows");
+    debugLog("OS: " + juce::SystemStats::getOperatingSystemName());
+
+	auto webview2Path = juce::File(
+        "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application");
+
+    if (webview2Path.exists()) {
+        debugLog("WebView2 Runtime found at: " +
+                 webview2Path.getFullPathName());
+    } else {
+        debugLog("WARNING: WebView2 Runtime not found in default location");
+    }
 #else
+    debugLog("Platform: Linux");
+
     setenv("VARIABLE_NAME", "VALUE", 1);
     setenv("ANOTHER_VAR", "VALUE", 1);
 #endif
@@ -198,6 +224,13 @@ void CrateDiggerAudioProcessorEditor::createWebView() {
         repaint();
 
         debugLog("WebView initialized successfully");
+
+#if JUCE_WINDOWS
+        debugLog("Check log file at: " +
+                 juce::File::getSpecialLocation(juce::File::tempDirectory)
+                     .getChildFile("cratedigger_debug.log")
+                     .getFullPathName());
+#endif
     } catch (const std::exception &e) {
         loadingMessage = "Failed to load WebView: " + juce::String(e.what());
         debugLog("WebView creation failed: " + juce::String(e.what()));
@@ -216,4 +249,4 @@ void CrateDiggerAudioProcessorEditor::onDownloadFinished(juce::File file) {
 
     dragComponent.setFile(file);
     dragComponent.setVisible(true);
-}
+} 
