@@ -41,7 +41,9 @@ jobs:
     
     - name: Configure (Linux)
       if: runner.os == 'Linux'
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      run: |
+        rmdir /s /q build || echo "No build dir" 
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
     
     - name: Build
       run: cmake --build build --config Release

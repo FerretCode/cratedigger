@@ -23,7 +23,7 @@ if (WIN32)
         CACHE PATH "WebView2 NuGet package location"
     )
 
-    set(WebView2_ROOT
+    set(WebView2_root_dir
         "${WEBVIEW2_DIR}"
         CACHE PATH "WebView2 root directory"
     )
